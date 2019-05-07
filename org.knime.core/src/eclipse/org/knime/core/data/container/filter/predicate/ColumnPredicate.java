@@ -48,15 +48,17 @@ package org.knime.core.data.container.filter.predicate;
 
 import java.util.function.Predicate;
 
-import org.knime.core.data.DataRow;
 import org.knime.core.data.MissingValue;
 
 /**
- * Abstract class for {@link FilterPredicate FilterPredicates} expressing logical operations on {@link TypedColumn Columns}.
+ * Abstract class for {@link FilterPredicate FilterPredicates} expressing logical operations on {@link TypedColumn
+ * Columns}.
  *
  * @param <T> the type of the column on which this predicate shall be applied
  * @author Marc Bux, KNIME GmbH, Berlin, Germany
  * @since 3.8
+ * @noextend This interface is not intended to be extended by clients.
+ * @noimplement This interface is not intended to be implemented by clients.
  */
 public abstract class ColumnPredicate<T> implements FilterPredicate {
 
@@ -76,7 +78,8 @@ public abstract class ColumnPredicate<T> implements FilterPredicate {
     }
 
     /**
-     * A {@link ColumnPredicate} that checks if the value in a given {@link TypedColumn Column} is a {@link MissingValue}.
+     * A {@link ColumnPredicate} that checks if the value in a given {@link TypedColumn Column} is a
+     * {@link MissingValue}.
      *
      * @param <T> the type of the column on which this predicate shall be applied
      */
@@ -99,8 +102,8 @@ public abstract class ColumnPredicate<T> implements FilterPredicate {
     }
 
     /**
-     * A {@link ColumnPredicate} that checks if the value in a given {@link TypedColumn Column} evaluates to true in that
-     * column for a given {@link Predicate}.
+     * A {@link ColumnPredicate} that checks if the value in a given {@link TypedColumn Column} evaluates to true in
+     * that column for a given {@link Predicate}.
      *
      * @param <T> the type of the column on which this predicate shall be applied
      */
@@ -139,6 +142,8 @@ public abstract class ColumnPredicate<T> implements FilterPredicate {
      * in a given {@link TypedColumn Column} against some value.
      *
      * @param <T> the type of the column on which this predicate shall be applied
+     * @noextend This interface is not intended to be extended by clients.
+     * @noimplement This interface is not intended to be implemented by clients.
      */
     public static abstract class ValuePredicate<T> extends ColumnPredicate<T> {
 
@@ -189,7 +194,8 @@ public abstract class ColumnPredicate<T> implements FilterPredicate {
     }
 
     /**
-     * A {@link ValuePredicate} that checks if the value in a given {@link TypedColumn Column} is not equal to some value.
+     * A {@link ValuePredicate} that checks if the value in a given {@link TypedColumn Column} is not equal to some
+     * value.
      *
      * @param <T> the type of the column on which this predicate shall be applied
      */
@@ -218,7 +224,8 @@ public abstract class ColumnPredicate<T> implements FilterPredicate {
     }
 
     /**
-     * A {@link ValuePredicate} that checks if the value in a given {@link TypedColumn Column} is lesser than some value.
+     * A {@link ValuePredicate} that checks if the value in a given {@link TypedColumn Column} is lesser than some
+     * value.
      *
      * @param <T> the comparable type of the column on which this predicate shall be applied
      */
@@ -241,8 +248,8 @@ public abstract class ColumnPredicate<T> implements FilterPredicate {
     }
 
     /**
-     * A {@link ValuePredicate} that checks if the value in a given {@link TypedColumn Column} is lesser than or equal to
-     * some value.
+     * A {@link ValuePredicate} that checks if the value in a given {@link TypedColumn Column} is lesser than or equal
+     * to some value.
      *
      * @param <T> the comparable type of the column on which this predicate shall be applied
      */
@@ -265,7 +272,8 @@ public abstract class ColumnPredicate<T> implements FilterPredicate {
     }
 
     /**
-     * A {@link ValuePredicate} that checks if the value in a given {@link TypedColumn Column} is greater than some value.
+     * A {@link ValuePredicate} that checks if the value in a given {@link TypedColumn Column} is greater than some
+     * value.
      *
      * @param <T> the comparable type of the column on which this predicate shall be applied
      */
@@ -288,8 +296,8 @@ public abstract class ColumnPredicate<T> implements FilterPredicate {
     }
 
     /**
-     * A {@link ValuePredicate} that checks if the value in a given {@link TypedColumn Column} is greater than or equal to
-     * some value.
+     * A {@link ValuePredicate} that checks if the value in a given {@link TypedColumn Column} is greater than or equal
+     * to some value.
      *
      * @param <T> the comparable type of the column on which this predicate shall be applied
      */

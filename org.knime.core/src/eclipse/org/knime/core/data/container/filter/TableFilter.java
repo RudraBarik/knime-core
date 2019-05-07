@@ -303,7 +303,7 @@ public final class TableFilter {
 
         /**
          * Configure the builder to provide {@link TableFilter TableFilters} that retain only rows according to a given
-         * {@link FilterPredicate}. Rows are only kept when {@link FilterPredicate#keep(DataRow)} evaluates to true.
+         * {@link FilterPredicate}.
          *
          * @param predicate the predicate that specifies which rows to keep
          * @return the same builder with updated parameters

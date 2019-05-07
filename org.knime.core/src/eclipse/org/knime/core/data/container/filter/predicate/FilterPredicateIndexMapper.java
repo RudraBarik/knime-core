@@ -92,49 +92,49 @@ public final class FilterPredicateIndexMapper implements Visitor<FilterPredicate
     @Override
     public <T> FilterPredicate visit(final MissingValuePredicate<T> mvp) {
         final Function<TypedColumn<T>, FilterPredicate> function = MissingValuePredicate::new;
-        return mvp.getColumn().accept(new ColumnCopier(function, m_map));
+        return mvp.getColumn().accept(new ColumnIndexMapper(function, m_map));
     }
 
     @Override
     public <T> FilterPredicate visit(final CustomPredicate<T> udf) {
         final Function<TypedColumn<T>, FilterPredicate> function = c -> new CustomPredicate<T>(c, udf.getPredicate());
-        return udf.getColumn().accept(new ColumnCopier(function, m_map));
+        return udf.getColumn().accept(new ColumnIndexMapper(function, m_map));
     }
 
     @Override
     public <T> FilterPredicate visit(final EqualTo<T> eq) {
         final Function<TypedColumn<T>, FilterPredicate> function = c -> new EqualTo<T>(c, eq.getValue());
-        return eq.getColumn().accept(new ColumnCopier(function, m_map));
+        return eq.getColumn().accept(new ColumnIndexMapper(function, m_map));
     }
 
     @Override
     public <T> FilterPredicate visit(final NotEqualTo<T> neq) {
         final Function<TypedColumn<T>, FilterPredicate> function = c -> new NotEqualTo<T>(c, neq.getValue());
-        return neq.getColumn().accept(new ColumnCopier(function, m_map));
+        return neq.getColumn().accept(new ColumnIndexMapper(function, m_map));
     }
 
     @Override
     public <T extends Comparable<T>> FilterPredicate visit(final LesserThan<T> lt) {
         final Function<TypedColumn<T>, FilterPredicate> function = c -> new LesserThan<T>(c, lt.getValue());
-        return lt.getColumn().accept(new ColumnCopier(function, m_map));
+        return lt.getColumn().accept(new ColumnIndexMapper(function, m_map));
     }
 
     @Override
     public <T extends Comparable<T>> FilterPredicate visit(final LesserThanOrEqualTo<T> leq) {
         final Function<TypedColumn<T>, FilterPredicate> function = c -> new LesserThanOrEqualTo<T>(c, leq.getValue());
-        return leq.getColumn().accept(new ColumnCopier(function, m_map));
+        return leq.getColumn().accept(new ColumnIndexMapper(function, m_map));
     }
 
     @Override
     public <T extends Comparable<T>> FilterPredicate visit(final GreaterThan<T> gt) {
         final Function<TypedColumn<T>, FilterPredicate> function = c -> new GreaterThan<T>(c, gt.getValue());
-        return gt.getColumn().accept(new ColumnCopier(function, m_map));
+        return gt.getColumn().accept(new ColumnIndexMapper(function, m_map));
     }
 
     @Override
     public <T extends Comparable<T>> FilterPredicate visit(final GreaterThanOrEqualTo<T> geq) {
         final Function<TypedColumn<T>, FilterPredicate> function = c -> new GreaterThanOrEqualTo<T>(c, geq.getValue());
-        return geq.getColumn().accept(new ColumnCopier(function, m_map));
+        return geq.getColumn().accept(new ColumnIndexMapper(function, m_map));
     }
 
     @Override
@@ -152,13 +152,14 @@ public final class FilterPredicateIndexMapper implements Visitor<FilterPredicate
         return not.getPredicate().accept(this).negate();
     }
 
-    private static class ColumnCopier implements org.knime.core.data.container.filter.predicate.TypedColumn.Visitor<FilterPredicate> {
+    private static final class ColumnIndexMapper
+        implements org.knime.core.data.container.filter.predicate.TypedColumn.Visitor<FilterPredicate> {
 
         private final Function<?, FilterPredicate> m_function;
 
         private final int[] m_map;
 
-        ColumnCopier(final Function<?, FilterPredicate> function, final int[] map) {
+        ColumnIndexMapper(final Function<?, FilterPredicate> function, final int[] map) {
             m_function = function;
             m_map = map;
         }

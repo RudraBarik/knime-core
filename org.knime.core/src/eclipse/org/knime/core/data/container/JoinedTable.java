@@ -137,8 +137,6 @@ public final class JoinedTable implements KnowsRowCountTable {
         }
 
         // apply row index filter to left and right tables
-        final DataTableSpec leftSpec = m_leftTable.getSpec();
-        final DataTableSpec rightSpec = m_rightTable.getSpec();
         final TableFilter.Builder leftFilterBuilder = new TableFilter.Builder(filter);
         final TableFilter.Builder rightFilterBuilder = new TableFilter.Builder(filter);
 
@@ -146,7 +144,7 @@ public final class JoinedTable implements KnowsRowCountTable {
         final Optional<Set<Integer>> optionalIndices = filter.getMaterializeColumnIndices();
         if (optionalIndices.isPresent()) {
             final Set<Integer> indices = optionalIndices.get();
-            final int offset = leftSpec.getNumColumns();
+            final int offset = m_leftTable.getSpec().getNumColumns();
             final int[] leftIndices = indices.stream().filter(i -> i < offset).mapToInt(i -> i).toArray();
             final int[] rightIndices = indices.stream().filter(i -> i >= offset).mapToInt(i -> i - offset).toArray();
             leftFilterBuilder.withMaterializeColumnIndices(leftIndices);

@@ -68,11 +68,12 @@ import org.knime.core.data.container.filter.predicate.IndexedColumn.LongColumn;
 import org.knime.core.data.container.filter.predicate.IndexedColumn.StringColumn;
 
 /**
+ * Helper class that can be used to copy {@link FilterPredicate FilterPredicates}.
  *
  * @author Marc Bux, KNIME GmbH, Berlin, Germany
  * @since 3.8
  */
-public class FilterPredicateCopier implements Visitor<FilterPredicate> {
+public final class FilterPredicateCopier implements Visitor<FilterPredicate> {
 
     @Override
     public <T> FilterPredicate visit(final MissingValuePredicate<T> mvp) {
@@ -137,7 +138,8 @@ public class FilterPredicateCopier implements Visitor<FilterPredicate> {
         return not.getPredicate().accept(this).negate();
     }
 
-    private static class ColumnCopier implements org.knime.core.data.container.filter.predicate.TypedColumn.Visitor<FilterPredicate> {
+    private final static class ColumnCopier
+        implements org.knime.core.data.container.filter.predicate.TypedColumn.Visitor<FilterPredicate> {
 
         private final Function<?, FilterPredicate> m_function;
 

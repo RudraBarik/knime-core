@@ -51,6 +51,8 @@ package org.knime.core.data.container.filter.predicate;
  *
  * @author Marc Bux, KNIME GmbH, Berlin, Germany
  * @since 3.8
+ * @noextend This interface is not intended to be extended by clients.
+ * @noimplement This interface is not intended to be implemented by clients.
  */
 public abstract class BinaryLogicalPredicate implements FilterPredicate {
 

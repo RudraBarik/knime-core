@@ -49,13 +49,13 @@ package org.knime.core.data.container.filter;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.knime.core.data.container.filter.predicate.TypedColumn.boolCol;
-import static org.knime.core.data.container.filter.predicate.TypedColumn.intCol;
-import static org.knime.core.data.container.filter.predicate.TypedColumn.longCol;
 import static org.knime.core.data.container.filter.predicate.FilterPredicate.custom;
 import static org.knime.core.data.container.filter.predicate.FilterPredicate.equal;
 import static org.knime.core.data.container.filter.predicate.FilterPredicate.greaterOrEqual;
 import static org.knime.core.data.container.filter.predicate.FilterPredicate.lesserOrEqual;
+import static org.knime.core.data.container.filter.predicate.TypedColumn.boolCol;
+import static org.knime.core.data.container.filter.predicate.TypedColumn.intCol;
+import static org.knime.core.data.container.filter.predicate.TypedColumn.longCol;
 
 import java.util.Iterator;
 import java.util.List;
@@ -64,9 +64,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.junit.Test;
-import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
-import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.data.container.filter.predicate.FilterPredicate;
@@ -83,13 +81,6 @@ import org.knime.core.data.def.StringCell;
  * @author Marc Bux, KNIME GmbH, Berlin, Germany
  */
 public class FilterDelegateRowIteratorTest {
-
-    private static final DataTableSpec SPEC =
-        new DataTableSpec(new DataColumnSpecCreator("int", IntCell.TYPE).createSpec(),
-            new DataColumnSpecCreator("string", StringCell.TYPE).createSpec(),
-            new DataColumnSpecCreator("long", LongCell.TYPE).createSpec(),
-            new DataColumnSpecCreator("double", DoubleCell.TYPE).createSpec(),
-            new DataColumnSpecCreator("boolean", BooleanCell.TYPE).createSpec());
 
     private static final List<DataRow> ROWS =
         IntStream.range(0, 100)
@@ -156,8 +147,8 @@ public class FilterDelegateRowIteratorTest {
      */
     @Test
     public void testFilterNone() {
-        Iterator<DataRow> referenceIt = ROWS.iterator();
-        TableFilter filter = TableFilter.filterRows(custom(intCol(0), i -> true));
+        final Iterator<DataRow> referenceIt = ROWS.iterator();
+        final TableFilter filter = TableFilter.filterRows(custom(intCol(0), i -> true));
         try (final CloseableRowIterator rowIt = new FilterDelegateRowIterator(new TestIterator(), filter, null)) {
             while (rowIt.hasNext() && referenceIt.hasNext()) {
                 assertEquals(rowIt.next(), referenceIt.next());

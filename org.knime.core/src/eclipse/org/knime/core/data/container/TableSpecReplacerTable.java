@@ -52,11 +52,14 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
+import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.filter.TableFilter;
+import org.knime.core.data.container.filter.predicate.FilterPredicate;
+import org.knime.core.data.container.filter.predicate.FilterPredicateSpecReplacer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -210,7 +213,16 @@ public final class TableSpecReplacerTable implements KnowsRowCountTable {
 
     @Override
     public CloseableRowIterator iteratorWithFilter(final TableFilter filter, final ExecutionMonitor exec) {
-        // TODO: what happens if the BDT has an intColumn and the ReplacerTable has a longColumn
+
+        final Optional<FilterPredicate> predicate = filter.getFilterPredicate();
+        if (predicate.isPresent()) {
+            final TableFilter.Builder referenceFilterBuilder = new TableFilter.Builder(filter);
+            final DataTableSpec referenceSpec = m_reference.getDataTableSpec();
+            final FilterPredicateSpecReplacer specReplacer = new FilterPredicateSpecReplacer(referenceSpec);
+            referenceFilterBuilder.withFilterPredicate(predicate.get().accept(specReplacer));
+            return m_reference.filter(referenceFilterBuilder.build(), exec).iterator();
+        }
+
         return m_reference.filter(filter, exec).iterator();
     }
 

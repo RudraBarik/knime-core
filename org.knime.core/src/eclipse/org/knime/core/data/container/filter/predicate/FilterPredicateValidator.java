@@ -74,11 +74,11 @@ import org.knime.core.data.def.StringCell;
 
 /**
  * Helper class that can be used to validate {@link FilterPredicate FilterPredicates} against a given
- * {@link DataTableSpec}. Note that it is not sufficient for {@link TypedColumn Columns} in the predicate to be compatible
- * (in the sense of {@link DataType#isCompatible(Class)}) to the type specified in the {@link DataTableSpec} for that
- * column. The types have to be actually equal. The reason for this is that {@link FilterPredicate FilterPredicates} are
- * intended to be pushed down to the underlying table stores and applied to stored values before {@link DataCell
- * DataCells} and {@link DataRow DataRows} are actually materialized.
+ * {@link DataTableSpec}. Note that it is not sufficient for {@link TypedColumn Columns} in the predicate to be
+ * compatible (in the sense of {@link DataType#isCompatible(Class)}) to the type specified in the {@link DataTableSpec}
+ * for that column. The types have to be actually equal. The reason for this is that {@link FilterPredicate
+ * FilterPredicates} are intended to be pushed down to the underlying table stores and applied to stored values before
+ * {@link DataCell DataCells} and {@link DataRow DataRows} are actually materialized.
  *
  * @author Marc Bux, KNIME GmbH, Berlin, Germany
  * @since 3.8
@@ -186,8 +186,9 @@ public final class FilterPredicateValidator implements Visitor<Void> {
 
         private void checkTypesEqual(final int index, final DataType expected) {
             if (!m_spec.getColumnSpec(index).getType().equals(expected)) {
-                throw new IllegalArgumentException("Column at index " + index + " is of type "
-                    + m_spec.getColumnSpec(index).getName() + ", which is incompatible to " + expected.getName() + ".");
+                throw new IllegalArgumentException(
+                    "Column at index " + index + " is of type " + m_spec.getColumnSpec(index).getType().getName()
+                        + ", which is incompatible to " + expected.getName() + ".");
             }
         }
 

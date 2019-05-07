@@ -65,6 +65,8 @@ import org.knime.core.data.def.StringCell;
  * @param <T> the type of values which this column holds
  * @author Marc Bux, KNIME GmbH, Berlin, Germany
  * @since 3.8
+ * @noextend This interface is not intended to be extended by clients.
+ * @noimplement This interface is not intended to be implemented by clients.
  */
 public abstract class IndexedColumn<T> implements TypedColumn<T> {
     private final int m_index;
@@ -87,6 +89,17 @@ public abstract class IndexedColumn<T> implements TypedColumn<T> {
     public int getIndex() {
         return m_index;
     }
+
+//    static abstract class CustomColumn<T> extends IndexedColumn<T> {
+//        CustomColumn(final int index) {
+//            super(index);
+//        }
+//
+//        @Override
+//        public <R> R accept(final Visitor<R> v) {
+//            return v.visit(this);
+//        }
+//    }
 
     /**
      * An {@link IndexedColumn} that holds values of {@link DataType} {@link BooleanCell#TYPE}.
@@ -117,10 +130,12 @@ public abstract class IndexedColumn<T> implements TypedColumn<T> {
     }
 
     /**
-     * Interface for {@link IndexedColumn IndexedColumns} that holds comparable values, i.e., values which over
-     * which a partial ordering can be imposed.
+     * Interface for {@link IndexedColumn IndexedColumns} that holds comparable values, i.e., values which over which a
+     * partial ordering can be imposed.
      *
      * @param <T> the comparable type of values which this column holds
+     * @noextend This interface is not intended to be extended by clients.
+     * @noimplement This interface is not intended to be implemented by clients.
      */
     public interface OrderColumn<T extends Comparable<T>> extends TypedColumn<T> {
     }

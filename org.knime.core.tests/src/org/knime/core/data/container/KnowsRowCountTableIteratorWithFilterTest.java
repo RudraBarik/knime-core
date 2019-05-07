@@ -47,8 +47,9 @@
 package org.knime.core.data.container;
 
 import static org.junit.Assert.assertEquals;
-import static org.knime.core.data.container.filter.predicate.TypedColumn.intCol;
 import static org.knime.core.data.container.filter.predicate.FilterPredicate.custom;
+import static org.knime.core.data.container.filter.predicate.TypedColumn.intCol;
+import static org.knime.core.data.container.filter.predicate.TypedColumn.longCol;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -64,6 +65,7 @@ import org.knime.core.data.RowKey;
 import org.knime.core.data.container.filter.TableFilter;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.LongCell;
 import org.knime.core.data.filestore.internal.NotInWorkflowDataRepository;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
@@ -121,18 +123,44 @@ public class KnowsRowCountTableIteratorWithFilterTest {
 
     }
 
-    private static TableFilter createFilter(final DataTableSpec spec, final int columnsFrom, final int columnsTo,
-        final long rowsFrom, final long rowsTo, final boolean withPredicate) {
-        TableFilter.Builder builder = ((new TableFilter.Builder())//
+    private static TableFilter createFilter(final int columnsFrom, final int columnsTo, final long rowsFrom,
+        final long rowsTo, final boolean withPredicate, final boolean withLongCol) {
+        final TableFilter.Builder builder = ((new TableFilter.Builder())//
             .withMaterializeColumnIndices(IntStream.range(columnsFrom, columnsTo + 1).toArray())//
             .withFromRowIndex(rowsFrom)//
             .withToRowIndex(rowsTo));
 
         if (withPredicate) {
-            builder.withFilterPredicate(custom(intCol(0), i -> i % 2 == 0));
+            if (withLongCol) {
+                builder.withFilterPredicate(custom(longCol(0), i -> i % 2 == 0));
+            } else {
+                builder.withFilterPredicate(custom(intCol(0), i -> i % 2 == 0));
+            }
         }
 
         return builder.build();
+    }
+
+    /**
+     * Tests that {@link TableFilter TableFilters} are correctly transformed and applied to
+     * {@link TableSpecReplacerTable TableSpecReplacerTables}.
+     *
+     * @throws Exception any kind of exception
+     */
+    @Test
+    public void testTableSpecReplacerTable() throws Exception {
+
+        final BufferedDataTable table = createTable(0, 8, 8, 0, 16);
+        final TableFilter filter = createFilter(2, 6, 4, 12, true, false);
+
+        final DataTableSpec newSpec = new DataTableSpec(IntStream.range(0, 8)
+            .mapToObj(i -> new DataColumnSpecCreator(Integer.toString(-i), LongCell.TYPE).createSpec())
+            .toArray(DataColumnSpec[]::new));
+        final BufferedDataTable newTable = EXEC.createSpecReplacerTable(table, newSpec);
+        final TableFilter newFilter = createFilter(2, 6, 4, 12, true, true);
+
+        compareTables(table, newTable, filter, newFilter);
+
     }
 
     /**
@@ -144,14 +172,14 @@ public class KnowsRowCountTableIteratorWithFilterTest {
     @Test
     public void testJoinedTable() throws Exception {
 
-        BufferedDataTable fullTable = createTable(0, 16, 16, 0, 16);
+        final BufferedDataTable fullTable = createTable(0, 16, 16, 0, 16);
 
-        BufferedDataTable leftTable = createTable(0, 8, 16, 0, 16);
-        BufferedDataTable rightTable = createTable(8, 16, 16, 0, 16);
-        BufferedDataTable concatenateTable = EXEC.createJoinedTable(leftTable, rightTable, EXEC);
+        final BufferedDataTable leftTable = createTable(0, 8, 16, 0, 16);
+        final BufferedDataTable rightTable = createTable(8, 16, 16, 0, 16);
+        final BufferedDataTable concatenateTable = EXEC.createJoinedTable(leftTable, rightTable, EXEC);
 
         // create filter without predicate, since joined tables cannot filter by predicate
-        TableFilter filter = createFilter(fullTable.getSpec(), 4, 12, 4, 12, false);
+        final TableFilter filter = createFilter(4, 12, 4, 12, false, false);
         compareTables(fullTable, concatenateTable, filter);
 
     }
@@ -165,16 +193,16 @@ public class KnowsRowCountTableIteratorWithFilterTest {
     @Test
     public void testColumnRearrangeTablePermute() throws Exception {
 
-        BufferedDataTable table = createTable(0, 8, 8, 0, 16);
+        final BufferedDataTable table = createTable(0, 8, 8, 0, 16);
 
         ColumnRearranger rearranger = new ColumnRearranger(table.getSpec());
         rearranger.permute(new int[]{7, 6, 5, 4, 3, 2, 1, 0});
-        BufferedDataTable rearrangedTable = EXEC.createColumnRearrangeTable(table, rearranger, EXEC);
+        final BufferedDataTable rearrangedTable = EXEC.createColumnRearrangeTable(table, rearranger, EXEC);
         rearranger = new ColumnRearranger(rearrangedTable.getSpec());
         rearranger.permute(new int[]{7, 6, 5, 4, 3, 2, 1, 0});
-        BufferedDataTable reRearrangedTable = EXEC.createColumnRearrangeTable(rearrangedTable, rearranger, EXEC);
+        final BufferedDataTable reRearrangedTable = EXEC.createColumnRearrangeTable(rearrangedTable, rearranger, EXEC);
 
-        TableFilter filter = createFilter(table.getSpec(), 2, 6, 4, 12, true);
+        final TableFilter filter = createFilter(2, 6, 4, 12, true, false);
         compareTables(table, reRearrangedTable, filter);
 
     }
@@ -188,16 +216,16 @@ public class KnowsRowCountTableIteratorWithFilterTest {
     @Test
     public void testColumnRearrangeTableDeleteAdd() throws Exception {
 
-        BufferedDataTable table = createTable(0, 8, 8, 0, 16);
+        final BufferedDataTable table = createTable(0, 8, 8, 0, 16);
 
         ColumnRearranger rearranger = new ColumnRearranger(table.getSpec());
         rearranger.remove(4, 5, 6, 7);
-        BufferedDataTable shortenedTable = EXEC.createColumnRearrangeTable(table, rearranger, EXEC);
+        final BufferedDataTable shortenedTable = EXEC.createColumnRearrangeTable(table, rearranger, EXEC);
 
         rearranger = new ColumnRearranger(shortenedTable.getSpec());
-        BufferedDataTable appendTable = createTable(4, 8, 8, 0, 16);
-        Map<RowKey, DataCell[]> cellsByRowKey = new HashMap<>();
-        for (DataRow row : appendTable) {
+        final BufferedDataTable appendTable = createTable(4, 8, 8, 0, 16);
+        final Map<RowKey, DataCell[]> cellsByRowKey = new HashMap<>();
+        for (final DataRow row : appendTable) {
             cellsByRowKey.put(row.getKey(),
                 IntStream.range(0, row.getNumCells()).mapToObj(i -> row.getCell(i)).toArray(DataCell[]::new));
         }
@@ -228,10 +256,10 @@ public class KnowsRowCountTableIteratorWithFilterTest {
 
         });
 
-        BufferedDataTable restoredTable = EXEC.createColumnRearrangeTable(shortenedTable, rearranger, EXEC);
+        final BufferedDataTable restoredTable = EXEC.createColumnRearrangeTable(shortenedTable, rearranger, EXEC);
 
         // create filter without predicate, since rearrange column tables with appended cols cannot filter by predicate
-        TableFilter filter = createFilter(table.getSpec(), 2, 6, 4, 12, false);
+        final TableFilter filter = createFilter(2, 6, 4, 12, false, false);
         compareTables(table, restoredTable, filter);
 
     }
@@ -245,30 +273,35 @@ public class KnowsRowCountTableIteratorWithFilterTest {
     @Test
     public void testConcatenateTable() throws Exception {
 
-        BufferedDataTable fullTable = createTable(0, 16, 16, 0, 16);
+        final BufferedDataTable fullTable = createTable(0, 16, 16, 0, 16);
 
-        BufferedDataTable topTable = createTable(0, 16, 16, 0, 8);
-        BufferedDataTable bottomTable = createTable(0, 16, 16, 8, 16);
-        BufferedDataTable concatenateTable =
+        final BufferedDataTable topTable = createTable(0, 16, 16, 0, 8);
+        final BufferedDataTable bottomTable = createTable(0, 16, 16, 8, 16);
+        final BufferedDataTable concatenateTable =
             EXEC.createConcatenateTable(new ExecutionMonitor(PROGRESS), topTable, bottomTable);
 
-        TableFilter filter = createFilter(fullTable.getSpec(), 4, 12, 4, 12, true);
+        final TableFilter filter = createFilter(4, 12, 4, 12, true, false);
         compareTables(fullTable, concatenateTable, filter);
 
     }
 
     private static void compareTables(final BufferedDataTable table1, final BufferedDataTable table2,
         final TableFilter filter) {
-        try (final CloseableRowIterator rowIt1 = table1.filter(filter).iterator();
-                CloseableRowIterator rowIt2 = table2.filter(filter).iterator()) {
+        compareTables(table1, table2, filter, filter);
+    }
+
+    private static void compareTables(final BufferedDataTable table1, final BufferedDataTable table2,
+        final TableFilter filter1, final TableFilter filter2) {
+        try (final CloseableRowIterator rowIt1 = table1.filter(filter1).iterator();
+                final CloseableRowIterator rowIt2 = table2.filter(filter2).iterator()) {
             while (rowIt1.hasNext() && rowIt2.hasNext()) {
-                DataRow row1 = rowIt1.next();
-                DataRow row2 = rowIt2.next();
+                final DataRow row1 = rowIt1.next();
+                final DataRow row2 = rowIt2.next();
                 assertEquals(row1.getKey(), row2.getKey());
                 assertEquals(row1.getNumCells(), row2.getNumCells());
                 for (int i = 0; i < row1.getNumCells(); i++) {
-                    DataCell cell1 = row1.getCell(i);
-                    DataCell cell2 = row2.getCell(i);
+                    final DataCell cell1 = row1.getCell(i);
+                    final DataCell cell2 = row2.getCell(i);
                     assertEquals(cell1, cell2);
                 }
             }

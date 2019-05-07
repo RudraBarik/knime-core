@@ -66,6 +66,8 @@ import org.knime.core.data.def.StringCell;
  * @param <T> the type of values which this column holds
  * @author Marc Bux, KNIME GmbH, Berlin, Germany
  * @since 3.8
+ * @noextend This interface is not intended to be extended by clients.
+ * @noimplement This interface is not intended to be implemented by clients.
  */
 public interface TypedColumn<T> {
 
@@ -143,11 +145,30 @@ public interface TypedColumn<T> {
         return new StringColumn(index);
     }
 
+    /*
+     * Not-yet-implemented draft for custom column support. Could be invoked like this: <code>
+     * FilterPredicate.equal(TypedColumn.customCol(0, cell -> ((IntValue)cell).getIntValue()), 5)
+     * </code> Allows for the definition of {@link FilterPredicate FilterPredicates} over arbitrary types (e.g., type
+     * {@link XMLValue}. Note that to make this work {@link Visitor#visit(CustomColumn)} will have to be overridden for
+     * classes extending {@link Visitor}. See also IndexedColumn.CustomColumn.
+     */
+    //    static <T> CustomColumn<T> customCol(final int index, final Function<DataCell, T> function) {
+    //        return new CustomColumn<T>(index) {
+    //            @Override
+    //            T getValueInternal(final DataCell cell) {
+    //                return function.apply(cell);
+    //            }
+    //        };
+    //    }
+
     /**
      * Implementation of the visitor design pattern for the {@link TypedColumn} class. Enables the introduction of new
      * operations on {@link TypedColumn Columns} without modifying the existing object structure.
      *
      * @param <R> the return type of the visitor
+     * @noextend This interface is not intended to be extended by clients.
+     * @noimplement This interface is not intended to be implemented by clients.
+     * @noreference This interface is not intended to be referenced by clients.
      */
     public interface Visitor<R> {
 
@@ -198,6 +219,16 @@ public interface TypedColumn<T> {
          * @return a return value obtained during the visit
          */
         R visit(final StringColumn stringCol);
+
+        //        /**
+        //         * The method invoked by a {@link CustomColumm}, when that column accepts this {@link Visitor}.
+        //         *
+        //         * @param customCol the column that accepts (and invokes) this visitor's visit
+        //         * @return a return value obtained during the visit
+        //         */
+        //        default <T> R visit(final CustomColumn<T> customCol) {
+        //            throw new UnsupportedOperationException("Custom columns not yet supported.");
+        //        }
 
     }
 
