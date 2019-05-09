@@ -2259,6 +2259,8 @@ public class Buffer implements KNIMEStreamConstants {
                     // buffer has already been finalized, at which point it has been invalidated in the cache
                 }
 
+                MemoryAlertSystem.getInstance().removeListener(this);
+
             }, "KNIME Buffer flusher").start();
             return true;
         }
@@ -2359,7 +2361,6 @@ public class Buffer implements KNIMEStreamConstants {
             assert Thread.holdsLock(Buffer.this);
 
             m_memoryAlertListener = new BufferFlusher(Buffer.this);
-            MemoryAlertSystem.getInstance().addListener(m_memoryAlertListener);
         }
 
         @Override
@@ -2438,7 +2439,6 @@ public class Buffer implements KNIMEStreamConstants {
 
             if (size() <= m_maxRowsInMem) {
                 m_memoryAlertListener = new BufferFlusher(Buffer.this);
-                MemoryAlertSystem.getInstance().addListener(m_memoryAlertListener);
             } else {
                 onCloseIfCachedAndLarge();
             }
