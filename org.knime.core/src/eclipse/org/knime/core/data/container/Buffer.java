@@ -134,6 +134,8 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.LRUCache;
 import org.knime.core.util.ShutdownHelper;
@@ -2591,14 +2593,14 @@ public class Buffer implements KNIMEStreamConstants {
              * ever check for exceptions in the asynchronous writer thread, since the graceful termination of that
              * thread is required when we're saving the workflow. It is never required at any other time.
              */
-            if (m_asyncAddFuture != null && !m_asyncAddFuture.isDone()) {
+            if (m_asyncAddFuture != null) {
                 try {
                     m_asyncAddFuture.get();
                 } catch (InterruptedException e) {
                     throw new RuntimeException("Interrupted while waiting for asynchronous disk write thread.", e);
                 } catch (ExecutionException e) {
-                    StringBuilder error = new StringBuilder();
-                    Throwable t = e.getCause();
+                    final StringBuilder error = new StringBuilder();
+                    final Throwable t = e.getCause();
                     if (t.getMessage() != null) {
                         error.append(t.getMessage());
                     } else {
@@ -2623,8 +2625,20 @@ public class Buffer implements KNIMEStreamConstants {
 
         private final WeakReference<Buffer> m_bufferRef;
 
+        private final Optional<String> m_nodeName;
+
         ASyncWriteCallable(final Buffer buffer) {
             m_bufferRef = new WeakReference<>(buffer);
+
+            String nodeName = null;
+            final NodeContext ctx = NodeContext.getContext();
+            if (ctx != null) {
+                final NodeContainer cont = ctx.getNodeContainer();
+                if (cont != null) {
+                    nodeName = cont.getNameWithID();
+                }
+            }
+            m_nodeName = Optional.ofNullable(nodeName);
         }
 
         @Override
@@ -2640,11 +2654,10 @@ public class Buffer implements KNIMEStreamConstants {
                 return null;
             }
 
-            Throwable throwable = null;
             try {
                 Buffer buffer = m_bufferRef.get();
                 if (buffer == null) {
-                    // buffer was already discarded (no rows added)
+                    /** Buffer was already discarded (no rows added) */
                     return null;
                 }
                 buffer.ensureWriterIsOpen();
@@ -2665,7 +2678,7 @@ public class Buffer implements KNIMEStreamConstants {
 
                 buffer = m_bufferRef.get();
                 if (buffer == null) {
-                    // buffer was already discarded
+                    /** Buffer was already discarded */
                     return null;
                 }
                 buffer.closeWriterAndWriteMeta();
@@ -2673,8 +2686,24 @@ public class Buffer implements KNIMEStreamConstants {
                 buffer = null;
 
             } catch (Throwable t) {
-                throwable = t;
-                logThrowable(t);
+                final StringBuilder error = new StringBuilder();
+                error.append("Writing of table to file");
+                if (m_nodeName.isPresent()) {
+                    error.append(" at node ");
+                    error.append(m_nodeName);
+                }
+                error.append(" encountered error: ");
+                error.append(t.getClass().getSimpleName());
+                if (t.getMessage() != null) {
+                    error.append(": " + t.getMessage());
+                }
+
+                LOGGER.warn(error.toString(), t);
+                LOGGER.warn("Table will be held in memory until node is cleared.");
+                LOGGER.warn("Workflow can't be saved in this state.");
+
+                error.append(". Workflow can't be saved until node is cleared.");
+                throw new IOException(error.toString(), t);
 
             } finally {
                 if (Thread.currentThread().isInterrupted()) {
@@ -2685,33 +2714,16 @@ public class Buffer implements KNIMEStreamConstants {
                      */
                     final Buffer buffer = m_bufferRef.get();
                     if (buffer != null) {
-                        try {
-                            buffer.performClear();
-                        } catch (Throwable t) {
-                            throwable = t;
-                            logThrowable(t);
-                        }
+                        /**
+                         * We don't really care if an exception is thrown here, since it'll most likely imply that the
+                         * buffer has already been cleared.
+                         */
+                        buffer.performClear();
                     }
-                }
-
-                if (throwable != null && throwable instanceof Exception) {
-                    throw (Exception)throwable;
                 }
             }
 
             return null;
-        }
-
-        private static void logThrowable(final Throwable t) {
-            final StringBuilder error = new StringBuilder();
-            error.append("Asynchronous writing of table to file encountered error:");
-            error.append("\n" + t.getClass().getSimpleName());
-            if (t.getMessage() != null) {
-                error.append(": " + t.getMessage());
-            }
-            error.append("\nTable will be held in memory until cleared."
-                + "\nWorkflow can't be saved in this state. Proceed with caution.");
-            LOGGER.error(error.toString(), t);
         }
 
     }
